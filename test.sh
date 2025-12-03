@@ -23,10 +23,10 @@ echo -e "\e[0m"
 curl -X "POST" "$SERVER_ADDRESS/$DEVICE_KEY" \
      -H 'Content-Type: application/json; charset=utf-8' \
      -d $'{
-  "body": "Test Message In Body",
+  "body": "Test Message In Body with %",
   "device_key": "'$BAD_DEVICE_KEY'",
-  "title": "Test Title In Body",
-  "subtitle": "Test Subtitle In Body",
+  "title": "Test Title In Body with %",
+  "subtitle": "Test Subtitle In Body with %",
   "badge": 1,
   "icon": "https://day.app/assets/images/avatar.jpg",
   "group": "test",

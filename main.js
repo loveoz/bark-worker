@@ -57,9 +57,14 @@ async function handleRequest(request, env, ctx) {
                 try {
                     if (contentType && contentType.includes('application/json')) {
                         requestBody = await request.json()
+
+                        requestBody = Object.keys(requestBody).reduce((obj, key) => {
+                            obj[key.toLowerCase()] = requestBody[key]
+                            return obj
+                        }, {})
                     }else if (contentType && contentType.includes('application/x-www-form-urlencoded')){
                         const formData = await request.formData()
-                        formData.forEach((value, key) => {requestBody[key] = value})
+                        formData.forEach((value, key) => {requestBody[key.toLowerCase()] = value})
 
                         try {
                             if (requestBody.title) {
@@ -72,6 +77,10 @@ async function handleRequest(request, env, ctx) {
                             
                             if (requestBody.body) {
                                 requestBody.body = decodeURIComponent(requestBody.body.replaceAll("\\+","%20"))
+                            }
+
+                            if (requestBody.markdown) {
+                                requestBody.markdown = decodeURIComponent(requestBody.markdown.replaceAll("\\+","%20"))
                             }
                         } catch (error) {
                             return new Response(JSON.stringify({
@@ -86,7 +95,7 @@ async function handleRequest(request, env, ctx) {
                             })
                         }
                     }else{
-                        searchParams.forEach((value, key) => {requestBody[key] = value})
+                        searchParams.forEach((value, key) => {requestBody[key.toLowerCase()] = value})
 
                         if (pathParts.length === 3) {
                             requestBody.body = pathParts[2]
@@ -121,6 +130,10 @@ async function handleRequest(request, env, ctx) {
                             
                             if (requestBody.body) {
                                 requestBody.body = decodeURIComponent(requestBody.body.replaceAll("\\+","%20"))
+                            }
+
+                            if (requestBody.markdown) {
+                                requestBody.markdown = decodeURIComponent(requestBody.markdown.replaceAll("\\+","%20"))
                             }
                         } catch (error) {
                             return new Response(JSON.stringify({
@@ -208,6 +221,15 @@ async function handleRequest(request, env, ctx) {
                 }
 
                 return handler.push(requestBody)
+            }
+
+            if (realPathname === '/') {
+                return new Response("ok", {
+                    status: 200,
+                    headers: {
+                        'content-type': 'text/plain',
+                    }
+                })
             }
 
             return new Response(JSON.stringify({
@@ -383,9 +405,9 @@ class Handler {
                 })
             }
 
-            let title = parameters.title || undefined
-            let subtitle = parameters.subtitle || undefined
-            let body = parameters.body || undefined
+            const title = parameters.title || undefined
+            const subtitle = parameters.subtitle || undefined
+            const body = parameters.body || undefined
 
             let sound = parameters.sound || undefined
             if (sound) {
@@ -407,12 +429,13 @@ class Handler {
             const image = parameters.image || undefined
             const copy = parameters.copy || undefined
             const badge = parameters.badge || undefined
-            const autoCopy = parameters.autoCopy || undefined
+            const autoCopy = parameters.autocopy || undefined
             const action = parameters.action || undefined
             const iv = parameters.iv || undefined
             const id = parameters.id || undefined
             const _delete = parameters.delete || undefined
-
+            const markdown = parameters.markdown || undefined
+            
             // https://developer.apple.com/documentation/usernotifications/generating-a-remote-notification
             const aps = {
                 'aps': (_delete) ? {
@@ -466,6 +489,7 @@ class Handler {
                 'image': image,
                 'id': id,
                 'delete': _delete,
+                'markdown': markdown,
             }
 
             const headers = {
